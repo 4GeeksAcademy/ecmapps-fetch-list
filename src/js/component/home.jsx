@@ -6,7 +6,7 @@ import TodoList from "./todo-list";
 //create your first component
 const Home = () => {
 	return (
-		<div>
+		<div className="d-flex justify-content-center">
 			<TodoList />
 		</div>
 	);
