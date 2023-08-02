@@ -10,6 +10,12 @@ const TodoList = () => {
     const [inputValue, setInputValue] = useState("");
     const [listItems, setList] = useState([]);
     const [showX, setX] = useState(-1);
+    
+    useEffect(()=>{
+        getData();
+    },[]);
+
+    //Listen to the Enter key and add the item to the list.
     const handleEntry = (event) => {
         if (event.key === 'Enter') {
             if (inputValue === "") alert("The input cannot be empty");
@@ -17,72 +23,71 @@ const TodoList = () => {
                 //Add to list
                 let newArr = [...listItems, inputValue];
                 setList(newArr);
+                setData(newArr);
                 //Clear input field
                 setInputValue("");
             }
         }
     };
 
-    useEffect(()=>{
-        getData();
-        console.log("Running only once!")
-    },[]);
-
     async function getData() {
-        const response = await fetch('https://playground.4geeks.com/apis/fake/todos/user/ecmapps');
-        const values = await response.json();
-        console.log(values);
-        setList(values);
+        fetch('https://playground.4geeks.com/apis/fake/todos/user/ecmapps').then(res =>{
+            if(!res.ok) {
+                //Add logic for 404 event and create user 
+                if(res.status == 404){
+                    //User does not exist
+                    createUser();
+                }
+                else{throw Error(res.statusText);}
+            }
+            return res.json();
+        }).then(data =>{
+            console.log(data);
+            //Data is fine and being added to the variable list
+            setList(data);
+        }).catch(error=> console.log(error))
     }
-    async function createData() {
-        fetch('https://playground.4geeks.com/apis/fake/todos/user/ecmapps', {
-            method: 'POST',
-            body: JSON.stringify([]),
-            headers:{
-                'Content-Type': 'application/json'
+    async function setData(arr){
+        fetch('https://playground.4geeks.com/apis/fake/todos/user/ecmapps',{
+            method: "PUT",
+            body: JSON.stringify(arr),
+            headers: {
+                'Content-Type': "application/json"
             }
         })
-        .then(resp=> {
-            console.log(resp.ok);
-            console.log('status: '+resp.status);
+        .then(resp => {
+            if(!resp.ok){
+                throw Error(resp.statusText);
+            }
+            console.log("List updated successfully!");
             return resp.json();
-        })
-        .then((data) => {
-            //Code starts here after fetch finishes
-            console.log('successfully created the list');
-        })
-        .catch(error =>{
-            console.log(error)
-        });
+        }).then(data=>console.log({data}))
+        .catch(error=>console.log(error))
     }
 
-    async function setData() {
-        fetch('https://playground.4geeks.com/apis/fake/todos/user/ecmapps', {
-            method: 'PUT',
-            body: JSON.stringify((listItems.length == 0)?{createData}:listItems),
-            headers:{
+    async function createUser(){
+        fetch('https://playground.4geeks.com/apis/fake/todos/user/ecmapps',{
+            method: "POST",
+            body: JSON.stringify([]),
+            headers: {
                 'Content-Type': 'application/json'
             }
         })
-        .then(resp=> {
-            console.log(resp.ok);
-            console.log('status: '+resp.status);
-            return resp.json();
+        .then(res=>{
+            if(!res.ok){
+                throw Error(res.statusText);
+            }
+            return res.json();
         })
-        .then((data) => {
-            //Code starts here after fetch finishes
-            //console.log('successfully changed the list');
-        })
-        .catch(error =>{
-            console.log(error)
-        });
+        .then(data=>console.log("Success \n"+{data}))
+        .catch(error=>console.log(error))
     }
 
     function removeFromList(index) {
         let newArr = [...listItems];
         newArr.splice(index, 1);
         setList(newArr);
-        setData();
+        setData(newArr);
     }
 
     return <div className='d-flex flex-column gap-2' style={containerStyle}>
